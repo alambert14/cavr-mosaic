@@ -19,5 +19,6 @@ Goal 2: Vision Processing Software
 ==================================
 Training OpenCV to Recognize Digits
 -----------------------------------
+![alt Learner Image](learner_done.png)a
 
 
