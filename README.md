@@ -15,3 +15,9 @@ ret, frame = video.read() #frame is the image file created
 ```
 Here is the [documentation](http://docs.opencv.org/2.4/modules/highgui/doc/reading_and_writing_images_and_video.html#videocapture-get 'Reading and Writing Images and Video') for reading and writing images and Video in OpenCV.
 
+Goal 2: Vision Processing Software
+==================================
+Training OpenCV to Recognize Digits
+-----------------------------------
+
+
