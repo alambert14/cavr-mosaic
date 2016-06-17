@@ -19,6 +19,11 @@ Goal 2: Vision Processing Software
 ==================================
 Training OpenCV to Recognize Digits
 -----------------------------------
-![alt Learner Image](learner_done.png)a
+![alt Learner Image](learner_done2.png)
+OpenCV learns how to read characters by using the K-Nearest Neighbors algorithm.  It requires a training file in order to learn.  I created this image using the digits in the NEEMO videos and made alterations to them in order to capture many different possibilities of how they may appear in the video.  I placed all of these digits in one file and used array slicing to break it into individual characters.  When I tested this training file, it provided 100% accuracy, most likely because all of the digits look so similar.  I will soon test it on other data.
+Finding Text in an Image
+------------------------
+There is a python script written by Dan Vanderkam which locates text in an image and crops the image accordingly.  The [source code](https://github.com/danvk/oldnyc/blob/master/ocr/tess/crop_morphology.py, "Crop Morphology") is available on GitHub.
+
 
 
