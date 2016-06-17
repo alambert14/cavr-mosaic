@@ -36,7 +36,9 @@ def crop_half(img):
     return new
 ```
 This is made possible by using PIL.
+
 **TODO:** Determine whether or not it is important to use his script.  The text can just be cropped using manual values as it is in later steps.  However, analyzing his code was informative in my understanding of vision processing. 
+
 ![alt Original Frame](frame.png)![alt Original Crop](cropped.png)![alt Cropped In Half](cropped_half.png)
 
 The original, cropped, and cropped in half images.
