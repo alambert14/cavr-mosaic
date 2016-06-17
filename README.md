@@ -57,4 +57,6 @@ rm lat.png &
 sleep 1
 rm long.png &
 ```
+Goal 3: Using Latitude and Longitute to Create A Mosaic
+=======================================================
 
