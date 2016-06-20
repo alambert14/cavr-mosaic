@@ -36,7 +36,9 @@ def crop_half(img):
     return new
 ```
 This is made possible by using PIL.
+
 **TODO:** Determine whether or not it is important to use his script.  The text can just be cropped using manual values as it is in later steps.  However, analyzing his code was informative in my understanding of vision processing. 
+
 ![alt Original Frame](frame.png)![alt Original Crop](cropped.png)![alt Cropped In Half](cropped_half.png)
 
 The original, cropped, and cropped in half images.
@@ -55,4 +57,22 @@ rm lat.png &
 sleep 1
 rm long.png &
 ```
+Goal 3: Using Latitude and Longitute to Create A Mosaic
+=======================================================
+Using the Correct Images
+------------------------
+There seems to be relatively enough varience in the latitude and longitude information for a photo mosaic to be formed.  Right now, the video responds with steady data until something gets in the way, such as a fin or a splash.
+It is necessary to filter out all of the "bad" or repetative longitute and latitude values using a series of if statements.  So far, these statements make the assumption that the video is being captured in Florida.
+The images that have correct lat and long values are stored in Frame objects, which are compiled into a list that is  passed to the function that will piece together the mosaic.
+Making the Mosaic
+-----------------
+Since this code assumes the robot is in Florida, the code only uses the decimals after the amount of minutes, since it it is only moving a thousanth of a minute every few seconds (i.e. 24N56.898 would be assumed as 898).  I used the maximum and minimum lat and long values from the video to create a base for the mosaic that will eventually be filled with image tiles.  I created a 19x16 list that will store all of the Frame objects.  For the latitude values, I subtracted the minimum latitude value from the actual value to give it a latitude index.
+**Note:** Since Florida is in the Western Hemisphere, all of the longitude values are assumed to be negative, and an ajustment has to be made (subtracting the value from the maximum long value to get its longitude index).
+Once they have these indeces, the pictures can be pasted into a big picture file that will be the mosaic.  The list of lists of Frame objects is iterated through and each occupied space is pasted into the mosaic.
+Issues
+------
+There are not as many images as I would have hoped, and this is due to not enough varience in the latitude and longitude information.
 
+This is what the mosaic looks like currently (from the video file I have):
+
+![alt Mosaic](mosaic.png)
