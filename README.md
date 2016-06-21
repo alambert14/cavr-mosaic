@@ -38,6 +38,7 @@ def crop_half(img):
 This is made possible by using PIL.
 
 **TODO:** Determine whether or not it is important to use his script.  The text can just be cropped using manual values as it is in later steps.  However, analyzing his code was informative in my understanding of vision processing. 
+**UPDATE:** I ended up not useing this code and creating my own script to crop the frames manually, considering that occurs later in the program anyways.  This reduces the codes adaptability, but at least I will not be copying his code in my own script.
 
 ![alt Original Frame](frame.png)![alt Original Crop](cropped.png)![alt Cropped In Half](cropped_half.png)
 
@@ -80,6 +81,11 @@ So far, since I am a novice in python, this code does not run very efficiently, 
 ### Seamlessness ###
 Ideally, this mosaic will eventually be a seamless combination of images, but right now I do not have enough latitude and longitude data or knowlege of python to do so.  This is now the program will be developed in the future, as we gain more data and I learn more about vision processing.
 
+### Adaptability ###
+The code will need to have major changes if a different kind of camera is used or if the data is collected somewhere other than the exact spot the robot was in Florida.  This is a major way that the code needs to be made better and will be improved in the future.  
+
+Final Product
+=============
 This is what the mosaic looks like currently (from the video file I have):
 
 ![alt Mosaic](mosaic.png)
