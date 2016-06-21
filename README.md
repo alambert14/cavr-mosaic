@@ -71,7 +71,14 @@ Since this code assumes the robot is in Florida, the code only uses the decimals
 Once they have these indeces, the pictures can be pasted into a big picture file that will be the mosaic.  The list of lists of Frame objects is iterated through and each occupied space is pasted into the mosaic.
 Issues
 ------
-There are not as many images as I would have hoped, and this is due to not enough varience in the latitude and longitude information.
+### Not Enough Data ###
+There are not as many images as I would have hoped, and this is due to not enough varience in the latitude and longitude information.  There are many gaps in the mosaic and it does not even begin to fill up the whole picture.
+
+### Efficiency ###
+So far, since I am a novice in python, this code does not run very efficiently, since each frame has to be processed and only a few are used.  This is something I will continue to develop.
+
+### Seamlessness ###
+Ideally, this mosaic will eventually be a seamless combination of images, but right now I do not have enough latitude and longitude data or knowlege of python to do so.  This is now the program will be developed in the future, as we gain more data and I learn more about vision processing.
 
 This is what the mosaic looks like currently (from the video file I have):
 
