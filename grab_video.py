@@ -102,7 +102,7 @@ def read_numbers(img):
 #reads the latitude and longitude values off of each frame of a video and stores them in a list
 def text_capture():
 
-    cap = cv2.VideoCapture('../140723_163000.MPG')
+    cap = cv2.VideoCapture('/home/cavr/160721_Videos/191000.MPG')
     print "Reading and processing frames may take a minute"
     print "Please Wait..."
     frame_list = []
@@ -170,6 +170,7 @@ def text_capture():
 
     #closes the stream and returns a list 
     cap.release()
+    cv2.waitKey(0)
     cv2.destroyAllWindows() 
     print "Frames processed...creating mosaic"
     return frame_list
@@ -203,7 +204,7 @@ def mosaic(frame_list):
     size = ((lon_range+1)*img_width,(lat_range+1)*img_height)
 
     #create a new blank image for the mosaic
-    blank = Image.new('RGB',size,(0,255,0))
+    blank = Image.new('RGB',size,(255,153,204))
 
     
     #creates a list of long_range+1 lists filled with lat_range+1 NoneTypes
@@ -235,7 +236,7 @@ def mosaic(frame_list):
 	    j = j+1
 	i = i+1
     #saves the mosaic	
-    blank.save('mosaic.png')
+    blank.save('mosaic1.png')
     print "Mosaic saved at mosaic.png"
 
 if __name__ == '__main__':
