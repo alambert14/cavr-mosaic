@@ -6,10 +6,13 @@ from PIL import Image, ImageDraw
 import time
 from frame import Frame
 
+mouse_x = 0
+mouse_y = 0
+
 # params for ShiTomasi corner detection
-feature_params = dict(maxCorners = 100, qualityLevel = 0.3,
-                       minDistance = 7,
-                       blockSize = 7 )
+feature_params = dict(maxCorners = 50, qualityLevel = 0.5,
+                       minDistance = 1,
+                       blockSize = 2 )
 
 # Parameters for lucas kanade optical flow
 lk_params = dict(winSize = (15,15),
@@ -77,6 +80,35 @@ def crop_frame_new(img):
     return new
     #688x420
 
+def mod_correction(lon):
+    if (lon[6:].find("N") != -1 or lon[6:].find("W") != -1):
+        print "Value Error"
+        return -1
+    else:
+        lon_dec = int(lon[6:])
+        if lon_dec >= 400 and lon_dec <= 500:
+            lon_dec = lon_dec-300
+            first_half = lon[:6]
+            lon = first_half + str(lon_dec)
+        if lon_dec > 1000:
+            lon_dec = str(1) + str(lon_dec)[2:]
+            first_half = lon[:6]
+            lon = first_half + str(lon_dec)
+        return lon
+
+def mod_correction2(lon):
+    lon_dec = int(lon[6:])
+    if lon_dec > 1000:
+        lon_dec = str(1) + str(lon_dec)[2:]
+        first_half = lon[:6]
+        lon = first_half + str(lon_dec)
+    
+def click(event, x, y, flags, param):
+    global mouse_x, mouse_y
+    mouse_x = x
+    mouse_y = y
+    
+
 
 
 #reads the numbers from the latitude and longitude images
@@ -84,7 +116,8 @@ def read_numbers(img):
 
     #loads the learner and testing file and converts them to grayscale
     img_train = cv2.imread('learner_done2.png')
-    img_test = cv2.imread(img)
+    img_test = cv2.imread(img) #7,
+                       #blockSize = 7 
     gray_train = cv2.cvtColor(img_train,cv2.COLOR_BGR2GRAY)
     gray_test = cv2.cvtColor(img_test,cv2.COLOR_BGR2GRAY)
 
@@ -152,6 +185,7 @@ def text_capture(video_file):
     print "Reading and processing frames may take a minute"
     print "Please Wait..."
     frame_list = []
+    picture_list = []
 
     current_lat = "00000.000"
     current_lon = "00000.000"
@@ -159,8 +193,11 @@ def text_capture(video_file):
 
     #while there are still frames in the video
     while(True):
-
+        if ind == 913:
+            print "*********************** END OF TRIMMED VIDEO ***********************"
         ret, frame = cap.read()
+        #cv2.imshow('frame', frame)
+        #cv2.waitKey(1)
         if frame is None:
             break
 
@@ -180,6 +217,8 @@ def text_capture(video_file):
         #reads the numbers from each frame
         lat = read_numbers('lat.png')
         lon = read_numbers('lon.png')
+        
+        #print lon
         print lat,lon
     #processes the latitude and longitude values based on a few conditions:
         #they must both have 9 characters
@@ -188,72 +227,102 @@ def text_capture(video_file):
         #they must not vary very much from the frame before it
     #this is so bad data can be filtered out, such as when there is a splash
         #if the frame is accepted, it will be appended to a list of Frame objects
+
+        ##### THIS WORKS ######
         if (len(lat) == 9 and len(lon) == 9):
             #print "Has 9 chars"
             if(lat.find('.') != -1 and lon.find('.') != -1):
                 #print "Has a decimal point"
                 if(lat.find('24N56') != -1 and lon.find('80W27') != -1):
+                    lon = mod_correction(lon)
+                    if lon == -1:
+                        continue
+                    #print lon
+                    if current_lat == "00000.000" or current_lon == "00000.000":
+                        current_lat = lat
+                        current_lon = lon
+                        #print "Current set"
                     #print "Is in florida"
                     lat_decimal = int(lat[6:])
                     lon_decimal = int(lon[6:])
                     current_lat_decimal = int(current_lat[6:])
                     current_lon_decimal = int(current_lon[6:])
-                    if(ind != 0):
-                        #print "Is not first frame"
-                        if((current_lat_decimal - lat_decimal >= -2 and current_lat_decimal - lat_decimal <= 2) and (current_lon_decimal - lon_decimal >= -2 and current_lon_decimal - lon_decimal <= 2)):
-                            #print "Not much variation"
-                            current_lat = lat
-                            current_lon = lon
-                            #print lat, lon
-                            tile = Frame(crop_frame_old(pil_im),lat,lon)
-                            frame_list.append(tile)
-                            #cv2.imshow('frame', gray)
-                        else:
-                            current_lat = lat
-                            current_lon = lon
-                    else:
+                    #print str(ind)
+                    #print "Is not first frame"
+                    
+                    #print "Current: "  + str(current_lat_decimal)
+                    #print "New: " + str(lat_decimal)
+                    if abs(current_lat_decimal - lat_decimal) <= 2 and abs(current_lon_decimal - lon_decimal) <= 2:
+                        #print "Not much variation"
                         current_lat = lat
                         current_lon = lon
-                        tile = Frame(crop_frame_old(pil_im),lat,lon)
+                        #print lat, lon
+                        tile = Frame(crop_frame_new(pil_im),lat,lon)
                         frame_list.append(tile)
-                        cv2.imshow('frame',gray)
+                        #cv2.imshow('frame', gray)
+        picture_list.append(crop_frame_new(pil_im))
     
         ind=ind+1   
-
+    print str(ind)
+    print str(len(frame_list))
     #closes the stream and returns a list 
     cap.release()
     #cv2.waitKey(0)
     cv2.destroyAllWindows() 
     print "Frames processed...creating mosaic"
-    return frame_list
+    return frame_list, picture_list
 
 def first_stitch(frame, blank, max_lon, min_lat):
-    print "First Stitch"
+    #print "First Stitch"
     #TODO: better names
-    lat_dec = int(frame.lat[6:])
-    lon_dec = int(frame.lon[6:])
+    #lat_dec = int(frame.lat[6:])
+
+    lat_dec = 921
+    lon_dec = 150
+    #lon_dec = int(frame.lon[6:])
     #creates an index for the lat and lon values from 0-maximum
-    lon_ind = maximum_lon-lon_dec
-    lat_ind = lat_dec-minimum_lat
+    print max_lon, min_lat
+    lon_ind = max_lon-lon_dec
+    lat_ind = lat_dec-min_lat
     #TODO: don't use numbers
-    img_width = frame.img.size[1]
-    img_height = frame.img.size[0]
+    img_width = frame.size[1]
+    img_height = frame.size[0]
     #determines the px position in the frame and pastes it to blank mosaic
     point = ((lon_ind*img_width),(lat_ind*img_height))
-    blank.paste(point, frame.img)
+    print "Pasted at: " + str(point)
+    blank.paste(frame, point)
     return point, blank
 
 def stitch(blank, prev_img, this_img, point):
-    print "New Stitch"
-    prev = np.array(prev_img)
-    img = np.array(this_img)
-    prev_gray = cv2.cvtColor(prev, cv2.COLOR_BGR2GRAY)
-    print "Finding good features to track"
-    p0 = cv2.goodFeaturesToTrack(prev_gray, mask = None, **feature_params)
+    #print "New Stitch"
+    #TODO: Don't save and reopen, just convert to array
+    prev_img.save('prev.png')
+    this_img.save('new.png')
+    prev_gray = cv2.imread('prev.png', cv2.IMREAD_GRAYSCALE)
+    img_gray = cv2.imread('new.png', cv2.IMREAD_GRAYSCALE)    
 
-    img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    #prev = np.array(prev_img)
+    #prev_gray = prev.astype(np.uint8)
+    cv2.imshow("img1", prev_gray)
+    cv2.waitKey(1)
+    #img = np.array(this_img)
+    #img_gray = img.astype(np.uint8)
+    #prev_gray = cv2.cvtColor(prev, cv2.COLOR_BGR2GRAY)
+    #print "Finding good features to track"
+    
+    p0 = cv2.goodFeaturesToTrack(prev_gray, mask = None, **feature_params)
+    #print str(point)
+    for pt in p0:
+        point_tup = (pt[0][0], pt[0][1])
+        cv2.circle(prev_gray, point_tup, 5, (255,0,0), -1)
+    if p0 == None:
+        cv2.imshow("image",prev_gray)
+        cv2.setMouseCallback("image", click)
+        cv2.waitKey(0)
+        p0 = [[mouse_x, mouse_y]]
+    #print p0
     #calculate the optical flow
-    print "Calculating optical flow"
+    #print "Calculating optical flow"
     p1, st, err = cv2.calcOpticalFlowPyrLK(prev_gray, img_gray, p0, None, **lk_params)
 
     good_new = p1[st==1] #Only takes values that have a status of 1 (means that optical flow has been found)
@@ -264,14 +333,14 @@ def stitch(blank, prev_img, this_img, point):
     i = 0
     lowest_err_ind = 0
     #find the lowest amount of error
-    print "Finding lowest error"
+    #print "Finding lowest error"
     while i < len(good_err):
         if good_err[i] < lowest_err:
             lowest_err = good_err[i]
             lowest_err_ind = i
         i += 1
     
-    print "Pasting the image"
+    #print "Pasting the image"
     #get the points from the feature with lowest error
     a,b = good_new[lowest_err_ind]
     c,d = good_old[lowest_err_ind]
@@ -280,25 +349,18 @@ def stitch(blank, prev_img, this_img, point):
     hor_disp = a-c
     vert_disp = b-d
     #create a point to paste the new image based on this displacement
-    new_point = ((point[0]+hor_disp),(point[1]+vert_disp))
+    new_point = ((int(point[0]+hor_disp)), (int(point[1]+vert_disp)))
     new_img = Image.fromarray(img_gray)
-    blank.paste(new_point, new_img)
-    return point, blank
-    
-
-
-    #find the best feature, find the corresponding feature in the prev. image, and then paste relative to the prev image
-
-    for i,(new,old) in enumerate(zip(good_new,good_old)):
-        a,b = new.ravel()
-        c,d = old.ravel()
-        mask = cv2.line(mask, (a,b),(c,d), color[i].tolist(), 2)
-        frame = cv2.circle(frame,(a,b),5,color[i].tolist(),-1)
-    img = cv2.add(frame,mask)
+    print "Pasted at: " + str(new_point)
+    blank.paste(new_img, new_point)
+    blank.save('inprogress.jpg')
+    return new_point, blank
 
 #creates a mosaic image from the list of Frames
-def mosaic(frame_list_rough):
+def mosaic(frame_list_rough, picture_list):
+    print "Beginning to stitch mosaic...please wait..."
     frame_list = []
+    #print frame_list
     lat_dec_list = []
     lon_dec_list = []
     
@@ -306,82 +368,92 @@ def mosaic(frame_list_rough):
     prev_lon = 0
     ind = 0
     #for each frame, create a list of the longitude and latitude decimals
-    for frame in frame_list:
+    for frame in frame_list_rough:
         #test to make sure there are no letters in the decimal
-        try:
-            lat_dec = frame.lat[6:]
-            lon_dec = frame.lon[6:]
-        except ValueError:
-            print "Value Error"
-            continue
+        #if (frame.lon[6:].find("N") != -1 or frame.lon[6:].find("W") != -1 or frame.lat[6:].find("N") != 01 or frame.lat[6:].find("W") != -1):
+        #    print "Value Error"
+        #    continue
+        #else:
+        lat_dec = frame.lat[6:]
+        lon_dec = frame.lon[6:]
         #test to make sure the numbers are consecutive
-        if ind == 0:
-            curr_lat = lat_dec
-            curr_lon = lon_dec
-                
-            frame_list.append(frame)
-            lat_dec_list.append(int(lat_dec))
-            lon_dec_list.append(int(lon_dec))
-            print "Finished first iteration"
+        #if ind == 0:
+        #    curr_lat = lat_dec
+        #    curr_lon = lon_dec
+        #        
+        #    frame_list.append(frame)
+        #    lat_dec_list.append(int(lat_dec))
+        #    lon_dec_list.append(int(lon_dec))
+        #    print "Finished first iteration"
             
-        else:
-            print "Checking consecutivity"
-            if curr_lat - lat_dec >= -1:
-                print "Lat1 succeeded"
-                if curr_lat - lat_dec <= 1:
-                    print "Lat2 succeeded"
-                    if curr_lon - lon_dec >= -1:
-                        print "Lon1 succeeded"
-                        if curr_lon - lon_dec >= 1:
-                            print "Lon2 succeeded"
-                            curr_lat = lat_dec
-                            curr_lon = lon_dec
-                    
-                            frame_list.append(frame)
-                            lat_dec_list.append(int(lat_dec))
-                            lon_dec_list.append(int(lon_dec))
-        ind += 1
+        #else:
+        #    #print "Checking consecutivity"
+        #    if int(curr_lat) - int(lat_dec) >= -1:
+        #        #print "Lat1 succeeded"
+        #        if int(curr_lat) - int(lat_dec) <= 1:
+        #            #print "Lat2 succeeded"
+        #            if int(curr_lon) - int(lon_dec) >= -1:
+        #                #print "Lon1 succeeded"
+        #                if int(curr_lon) - int(lon_dec) >= 1:
+        #                    #print "Lon2 succeeded"
+        #                    curr_lat = lat_dec
+        #                    curr_lon = lon_dec
+        #            
+        #                    frame_list.append(frame)
+        lat_dec_list.append(int(lat_dec))
+        lon_dec_list.append(int(lon_dec))
+        frame_list.append(frame)
+        #ind += 1
 
+    #print str(len(lat_dec_list))
+    #print str(len(frame_list))
     print str(lat_dec_list)
+    print str(lon_dec_list)
 
     #recognize the largest and smallest latitude and longitude values
-    print "Finding maximum and minimum"
+    #print "Finding maximum and minimum"
     maximum_lat = max(lat_dec_list)
-    minimum_lat = min(lat_dec_list)
+    minimum_lat = min(lat_dec_list) - 1
     maximum_lon = max(lon_dec_list)
     minimum_lon = min(lon_dec_list)
 
     #finds the range of the latitude and longitude values
     #TODO: find a range function to use instead
-    print "Calculating range"
+    #print "Calculating range"317
+
     lat_range = maximum_lat - minimum_lat
     lon_range = maximum_lon - minimum_lon
 
     #finds the dimensions of the image so the size of the mosaic can be calculated
-    print "Finding size of the mosaic"
+    #print "Finding size of the mosaic"
     img_width = frame_list[0].img.size[0]
     img_height = frame_list[0].img.size[1]
-    size = ((lon_range+1)*img_width,(lat_range+1)*img_height)
+    size = (((lon_range+1)*img_width),((lat_range+1)*img_height))
 
     #create a new blank image for the mosaic
-    print "Creating a new blank image"
-    blank = Image.new('RGB',size,(255,153,204))
-    print "Creating a new point"
+    #print "Creating a new blank image"
+    blank = Image.new('RGB',size,(255,153,153))
+    #print "Creating a new point"
     point = (0,0)
 
     #for each frame, stitch it to the one previous
     i = 0
-    print "About to loop 1"
-    while i < len(frame_list):
+    #print "About to loop 1"
+
+    
+    while i < len(picture_list):
         if i == 0:
-            print "About to do first stich"
-            point, blank = first_stitch(frame_list[i], blank, maximum_lon, minimum_lat)
+            #print "About to do first stich"
+            point, blank = first_stitch(picture_list[i], blank, maximum_lon, minimum_lat)
+            #blank.save('mosaic1.jpg')
         else:
             print "About to do next stitch"
-            point, blank = stitch(frames_list[i-1], frames_list[i], point) #TODO: more params
+            point, blank = stitch(blank, picture_list[i-1], picture_list[i], point) #TODO: more params
+            #blank.save('mosaic1.jpg')
            
         i += 1
 
+    print "Saving Mosaic to mosaic1.png"
     blank.save('mosaic1.jpg')
 
     
@@ -451,8 +523,9 @@ if __name__ == '__main__':
     ##Stores returned frame_list here
     #frame_list = text_capture(video_file))
     
-    mosaic(text_capture('/home/cavr/160721_Videos/191000_trim.MPG'))
-
+    
+    frames, pictures = text_capture('/home/cavr/160721_Videos/191000.MPG')
+    mosaic(frames, pictures)
 
 
 
