@@ -70,7 +70,17 @@ def crop_frame_old(img):
     return new
     #new width is 705px
 
+def crop_alt(img):
+    width = img.size[0]
+    height = img.size[1]
+    new = img.crop((326,height-62,374,height-38))
+    return new
 
+def crop_time(img):
+    width = img.size[0]
+    height = img.size[1]
+    new = img.crop((150,height-62,278,height-38))
+    return new
 
 #crops the black strip and the lat lon labels out of the frame
 def crop_frame_new(img):
@@ -115,30 +125,30 @@ def click(event, x, y, flags, param):
 def read_numbers(img):
 
     #loads the learner and testing file and converts them to grayscale
-    img_train = cv2.imread('learner_done2.png')
+    img_train = cv2.imread('learner_done3.png')
     img_test = cv2.imread(img) #7,
                        #blockSize = 7 
     gray_train = cv2.cvtColor(img_train,cv2.COLOR_BGR2GRAY)
     gray_test = cv2.cvtColor(img_test,cv2.COLOR_BGR2GRAY)
 
     # Now we split the image to 260 cells, each 16x24 size
-    cells_train = [np.hsplit(row,10) for row in np.vsplit(gray_train,26)]
+    cells_train = [np.hsplit(row,10) for row in np.vsplit(gray_train,28)]
     # 9 cells, 16x24
-    cells_test = [np.hsplit(gray_test,9)]
-
+    #cells_test = [np.hsplit(gray_test,9)]
+    cells_test = [np.hsplit(gray_test,8)]
     # Make it into a Numpy array. It size will be (26,10,16,24)
     x_train = np.array(cells_train)
     x_test = np.array(cells_test)
 
     # Now we prepare train_data and test_data.
 
-    train = x_train[:,:5].reshape(-1,384).astype(np.float32) # Size = (2500,400)
+    train = x_train[:,:10].reshape(-1,384).astype(np.float32) # Size = (2500,400)
     #test = x[:,5:10].reshape(-1,384).astype(np.float32) # Size = (2500,400)
     test = x_test.reshape(-1,384).astype(np.float32)
 
     # Create labels for train and test data
-    k = np.arange(13)
-    train_labels = np.repeat(k,10)[:,np.newaxis]
+    k = np.arange(14)
+    train_labels = np.repeat(k,20)[:,np.newaxis]
     test_labels = train_labels.copy()
 
     # Initiate kNN, train the data, then test it with test data for k=1
@@ -166,9 +176,11 @@ def read_numbers(img):
     str2 = str2.replace("11", "W", 1)
     str2 = str2.replace("10", "N", 1)
     str2 = str2.replace("12", ".", 1)
+    str2 = str2.replace("13", ":", 2)
 
     #removes the rest of the list string elements that aren't numbers
     str3 = ""
+
     for e in str2:
         if(e != "[" and e != "]" and e != " "):
             str3+=str(e)
@@ -207,19 +219,27 @@ def text_capture(video_file):
     
         #crops the frame to latitude and longitude
         first_crop = crop(pil_im)
-        lat_im = crop_lat(first_crop)
-        lon_im = crop_lon(first_crop)
+        #alt_im = crop_alt(pil_im)
+        time_im = crop_time(pil_im)
+        #lat_im = crop_lat(first_crop)
+        #lon_im = crop_lon(first_crop)
 
     #saves the latitude and longitude images
-        lat_im.save('lat.png')
-        lon_im.save('lon.png') 
-    
+        #lat_im.save('lat.png')
+        #lon_im.save('lon.png') 
+        #alt_im.save('alt.png')
+        time_im.save('time.png')
         #reads the numbers from each frame
-        lat = read_numbers('lat.png')
-        lon = read_numbers('lon.png')
+        #lat = read_numbers('lat.png')
+        #lon = read_numbers('lon.png')
+        
+        #alt = read_numbers('alt.png')
+        time = read_numbers('time.png')
         
         #print lon
-        print lat,lon
+        #print lat,lon
+        #print alt
+        print time
     #processes the latitude and longitude values based on a few conditions:
         #they must both have 9 characters
         #they must contain a decimal point
@@ -229,48 +249,49 @@ def text_capture(video_file):
         #if the frame is accepted, it will be appended to a list of Frame objects
 
         ##### THIS WORKS ######
-        if (len(lat) == 9 and len(lon) == 9):
-            #print "Has 9 chars"
-            if(lat.find('.') != -1 and lon.find('.') != -1):
-                #print "Has a decimal point"
-                if(lat.find('24N56') != -1 and lon.find('80W27') != -1):
-                    lon = mod_correction(lon)
-                    if lon == -1:
-                        continue
-                    #print lon
-                    if current_lat == "00000.000" or current_lon == "00000.000":
-                        current_lat = lat
-                        current_lon = lon
-                        #print "Current set"
-                    #print "Is in florida"
-                    lat_decimal = int(lat[6:])
-                    lon_decimal = int(lon[6:])
-                    current_lat_decimal = int(current_lat[6:])
-                    current_lon_decimal = int(current_lon[6:])
-                    #print str(ind)
-                    #print "Is not first frame"
-                    
-                    #print "Current: "  + str(current_lat_decimal)
-                    #print "New: " + str(lat_decimal)
-                    if abs(current_lat_decimal - lat_decimal) <= 2 and abs(current_lon_decimal - lon_decimal) <= 2:
-                        #print "Not much variation"
-                        current_lat = lat
-                        current_lon = lon
-                        #print lat, lon
-                        tile = Frame(crop_frame_new(pil_im),lat,lon)
-                        frame_list.append(tile)
-                        #cv2.imshow('frame', gray)
-        picture_list.append(crop_frame_new(pil_im))
+        #if (len(lat) == 9 and len(lon) == 9):
+        #   #print "Has 9 chars"
+        #    if(lat.find('.') != -1 and lon.find('.') != -1):
+        #        #print "Has a decimal point"
+        #        if(lat.find('24N56') != -1 and lon.find('80W27') != -1):
+        #            lon = mod_correction(lon)
+        #            if lon == -1:
+        #                continue
+        #            #print lon
+        #            if current_lat == "00000.000" or current_lon == "00000.000":
+        #                current_lat = lat
+        #                current_lon = lon
+        #                #print "Current set"
+        #            #print "Is in florida"
+        #            lat_decimal = int(lat[6:])
+        #            lon_decimal = int(lon[6:])
+        #            current_lat_decimal = int(current_lat[6:])
+        #            current_lon_decimal = int(current_lon[6:])
+        #            #print str(ind)
+        #            #print "Is not first frame"
+        #           
+        #            #print "Current: "  + str(current_lat_decimal)
+        #            #print "New: " + str(lat_decimal)
+        #            if abs(current_lat_decimal - lat_decimal) <= 2 and abs(current_lon_decimal - lon_decimal) <= 2:
+        #                #print "Not much variation"
+        #                current_lat = lat
+        #                current_lon = lon
+        #                #print lat, lon
+        #                tile = Frame(crop_frame_new(pil_im),lat,lon)
+        #                frame_list.append(tile)
+        #                #cv2.imshow('frame', gray)
+        #picture_list.append(crop_frame_new(pil_im))
     
-        ind=ind+1   
-    print str(ind)
-    print str(len(frame_list))
+    #    ind=ind+1   
+    #print str(ind)
+    #print str(len(frame_list))
     #closes the stream and returns a list 
     cap.release()
     #cv2.waitKey(0)
     cv2.destroyAllWindows() 
     print "Frames processed...creating mosaic"
-    return frame_list, picture_list
+    
+    #return frame_list, picture_list
 
 def first_stitch(frame, blank, max_lon, min_lat):
     #print "First Stitch"
@@ -524,9 +545,9 @@ if __name__ == '__main__':
     #frame_list = text_capture(video_file))
     
     
-    frames, pictures = text_capture('/home/cavr/160721_Videos/191000.MPG')
-    mosaic(frames, pictures)
-
+    #frames, pictures = text_capture('/home/cavr/160721_Videos/191000.MPG')
+    #mosaic(frames, pictures)
+    text_capture('/home/cavr/160721_Videos/191000.MPG')
 
 
 
