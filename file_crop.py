@@ -13,10 +13,21 @@ def crop_frame(img):
 
 
 if __name__ == "__main__":
-    for fn in os.listdir('/home/cavr/Aaron'):
-        fn.open()
-        frame = cv2.imread(fn.name)
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        pil_im = Image.fromarray(gray)
-        new = crop_frame(pil_im)
-        new.save(fn.name)
+    #for fn in os.listdir('/home/cavr/Aaron'):
+    #    fn.open()
+    #    frame = cv2.imread(fn.name)
+    #    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    #    pil_im = Image.fromarray(gray)
+    #    new = crop_frame(pil_im)
+    #    new.save(fn.name)
+    cap = cv2.VideoCapture('/home/cavr/160721_Videos/191000.MPG')
+    ind = 0
+    while(True):
+        ret, frame = cap.read()
+        #cv2.imshow('frame', frame)
+        #cv2.waitKey(1)
+        if frame is None:
+            break
+        pil = Image.fromarray(frame)
+        pil.save("/home/cavr/Test_images/" + str(ind) + ".jpg")
+        ind+=1
