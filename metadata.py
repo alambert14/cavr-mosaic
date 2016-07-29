@@ -79,7 +79,7 @@ def setGPS(lat, lon, i, img):
     lat_min = lat[ind+1:]
     lat_min2 = ""
     for e in lat_min:
-        if(e != "."):
+        if(e != "." and e != "-"):
             lat_min2+=str(e)
 
     lat_min = int(lat_min2)
@@ -88,7 +88,7 @@ def setGPS(lat, lon, i, img):
     lon_min = lon[ind+1:]
     lon_min2 = ""
     for e in lon_min:
-        if(e != "."):
+        if(e != "." and e != "-"):
             lon_min2+=str(e)
 
     lon_min = int(lon_min2)
@@ -208,6 +208,8 @@ def text_capture(video_file):
     del_lon = 0
     est_time1 = est_time
     first_time = True
+    p2_lat = 0
+    p2_lon = 0
     
 
     #while there are still frames in the video
@@ -263,10 +265,13 @@ def text_capture(video_file):
             colon_index = tm.find(":") 
             if (colon_index != -1 and tm[colon_index+1:].find(":") != -1):
                 if tm[:2].find("19") != -1:
-                    current_time = (int(tm[3:5])*10) + int(tm[6:])
-                    if abs(est_time - current_time) >= 2:
-                        if(current_time != prev_time):    
+                    current_time = (int(tm[3:5])*60) + int(tm[6:])
+                    if abs(est_time - current_time) <= 2:
+                        if(current_time != prev_time):
+                            #print prev_time    
                             good_time = True
+                            #print current_time, est_time
+                            prev_time = current_time
                         
                     
                      
@@ -304,13 +309,14 @@ def text_capture(video_file):
                             current_lat = lat
                             current_lon = lon
                             print lat, lon
-                            good_data = True
+                            
                             
                             
                             #tile = Frame(crop_frame(pil_im),lat,lon)
                             #frame_list.append(tile)
                             #cv2.imshow('frame', gray)
-                            if(lat_decimal != current_lat_decimal or lon_decimal != current_lon_decimal):
+                            if((lat_decimal != current_lat_decimal or lon_decimal != current_lon_decimal) and good_time):
+                                good_data = True
                                 if not first_time:
                                     est_time1 = est_time2
                                 curr_uniq_lat_dec = int(curr_uniq_lat[6:])
@@ -318,14 +324,30 @@ def text_capture(video_file):
                                 uniq_lat_dec = int(lat[6:])
                                 uniq_lon_dec = int(lon[6:])
                                 del_lat = uniq_lat_dec - curr_uniq_lat_dec
-                                del_lon = uniq_lon_dec - curr_uniq_lon_dec
-                                est_time2 = est_time
+                                p2_lat = uniq_lat_dec
+                                #print del_lat
+                                
+                                del_lon = uniq_lon_dec - curr_uniq_lon_dec 
+                                p2_lon = uniq_lon_dec
+                                #print del_lon
+                                est_time2 = current_time
+                                
+                                #print est_time2 - est_time1
                                 first_time = False
                                 
 
         if good_time and del_lat != 0 and del_lon != 0:
-            calc_lat = (del_lat/est_time2-est_time1)*(est_time2-est_time)
-            calc_lon = (del_lon/est_time2-est_time1)*(est_time2-est_time)
+            #may want to use current time instead of est_time
+            #print str(del_lat/est_time2-est_time1)
+
+
+            ### DIVISION BY 0 ###
+            print str(del_lat/(est_time2-est_time1)*(current_time-est_time2))
+            #print str(est_time2-est_time1)
+            #print str((est_time-est_time2))
+            calc_lat = (del_lat/(est_time2-est_time1))*(est_time-est_time2) + p2_lat
+            print str(calc_lat)
+            calc_lon = (del_lon/(est_time2-est_time1))*(est_time-est_time2) + p2_lon
             tile = crop_frame(pil_im)
 
             str_calc_lat = "24N56." + str(calc_lat)
